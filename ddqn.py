@@ -39,7 +39,12 @@ class DDQNAgent:
         self.device = device
         self.online = ConvNet(cfg.in_channels, cfg.num_actions).to(device)
         self.target = ConvNet(cfg.in_channels, cfg.num_actions).to(device)
+        # 多 GPU: 若可用且设备为 CUDA，则使用 DataParallel
+        if device.type == 'cuda' and torch.cuda.device_count() > 1:
+            self.online = nn.DataParallel(self.online)
+            self.target = nn.DataParallel(self.target)
         self.target.load_state_dict(self.online.state_dict())
+        # 注意：优化器需在（可能的）并行包装之后创建
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=cfg.lr)
         self.learn_steps = 0
 
@@ -66,3 +71,17 @@ class DDQNAgent:
         if self.learn_steps % self.cfg.target_sync_interval == 0:
             self.target.load_state_dict(self.online.state_dict())
         return loss.item()
+
+    # --- 辅助：保存/加载在 DataParallel 下的权重 ---
+    def _unwrap(self, model: nn.Module) -> nn.Module:
+        return model.module if isinstance(model, nn.DataParallel) else model
+
+    def state_dicts(self):
+        return {
+            'online': self._unwrap(self.online).state_dict(),
+            'target': self._unwrap(self.target).state_dict(),
+        }
+
+    def load_state_dicts(self, state):
+        self._unwrap(self.online).load_state_dict(state['online'])
+        self._unwrap(self.target).load_state_dict(state['target'])

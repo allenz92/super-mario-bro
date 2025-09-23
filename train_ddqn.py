@@ -91,11 +91,11 @@ def main():
 
         if global_step % 10_000 == 0:
             save_path = os.path.join(args.save_dir, f'model_{global_step}.pt')
-            torch.save({'online': agent.online.state_dict(), 'target': agent.target.state_dict(), 'step': global_step}, save_path)
+            torch.save({**agent.state_dicts(), 'step': global_step}, save_path)
 
     # final save
     save_path = os.path.join(args.save_dir, f'model_final.pt')
-    torch.save({'online': agent.online.state_dict(), 'target': agent.target.state_dict(), 'step': args.total_steps}, save_path)
+    torch.save({**agent.state_dicts(), 'step': args.total_steps}, save_path)
     env.close()
     writer.close()
 

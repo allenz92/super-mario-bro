@@ -23,6 +23,21 @@ python train_ddqn.py \
   --save-dir runs/mario_ddqn
 ```
 
+### 多 GPU 训练
+
+- 已内置对 PyTorch `DataParallel` 的支持：若检测到多张 CUDA GPU，会自动在 `DDQNAgent` 内并行前向与反向。
+- 启动方式与单卡相同；确保可见 GPU 包含两张卡，例如：
+
+```bash
+# 例：使用第 0,1 两张卡
+CUDA_VISIBLE_DEVICES=0,1 python train_ddqn.py \
+  --env-id SuperMarioBros-1-1-v0 \
+  --total-steps 2000000 \
+  --save-dir runs/mario_ddqn
+```
+
+注意：保存时会自动解包 `DataParallel`，因此 checkpoint 可在单卡或多卡环境下互通加载。
+
 ## 主要文件
 - `mario_wrappers.py`: 环境包装与图像预处理
 - `ddqn.py`: 模型结构与目标网络同步
