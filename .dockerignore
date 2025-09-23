@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+.env
+
+.git
+.gitignore
+
+.DS_Store
+.idea/
+.vscode/
+
+logs/
+checkpoints/
+runs/
+outputs/
+*.pt
+*.pth
+*.onnx
+
+# 不忽略 Dockerfile 自身

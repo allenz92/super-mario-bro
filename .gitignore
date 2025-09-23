@@ -1,0 +1,12 @@
+.DS_Store
+.idea/
+.vscode/
+
+logs/
+checkpoints/
+runs/
+outputs/
+*.pt
+*.pth
+*.onnx
+*.log
