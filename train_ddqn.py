@@ -44,6 +44,8 @@ def main():
     parser.add_argument('--log-interval', type=int, default=1000)
     parser.add_argument('--updates-per-step', type=int, default=1, help='每步执行几次学习以提高GPU利用率')
     parser.add_argument('--no-dp', action='store_true', help='关闭DataParallel，仅使用单GPU')
+    parser.add_argument('--frame-skip', type=int, default=4, help='环境每 action 跳过帧数')
+    parser.add_argument('--stack-frames', type=int, default=4, help='堆叠帧数')
     parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu')
     args = parser.parse_args()
 
@@ -55,7 +57,7 @@ def main():
     device = torch.device(args.device)
 
     print(f"[Init] Device: {device}, CUDA GPUs: {torch.cuda.device_count() if torch.cuda.is_available() else 0}")
-    env = make_mario_env(args.env_id)
+    env = make_mario_env(args.env_id, frame_skip=args.frame_skip, stack=args.stack_frames)
     obs = env.reset()
     in_channels = obs.shape[0]
     num_actions = env.action_space.n
