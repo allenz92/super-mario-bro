@@ -59,6 +59,12 @@ class DDQNAgent:
 
     def learn(self, batch, gamma: float = None):
         obs, actions, rewards, next_obs, dones = batch
+        # 非阻塞拷贝到目标设备（配合 pinned memory）
+        obs = obs.to(self.device, non_blocking=True)
+        next_obs = next_obs.to(self.device, non_blocking=True)
+        actions = actions.to(self.device, non_blocking=True)
+        rewards = rewards.to(self.device, non_blocking=True)
+        dones = dones.to(self.device, non_blocking=True)
         q_values = self.online(obs).gather(1, actions.view(-1, 1)).squeeze(1)
         with torch.no_grad():
             next_actions = self.online(next_obs).argmax(dim=1, keepdim=True)
