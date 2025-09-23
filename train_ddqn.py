@@ -6,6 +6,7 @@ import random
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from mario_wrappers import make_mario_env
 from replay_buffer import ReplayBuffer
@@ -40,6 +41,7 @@ def main():
     parser.add_argument('--eps-end', type=float, default=0.1)
     parser.add_argument('--eps-decay-steps', type=int, default=1_000_000)
     parser.add_argument('--save-dir', type=str, default='runs/mario_ddqn')
+    parser.add_argument('--log-interval', type=int, default=1000)
     parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu')
     args = parser.parse_args()
 
@@ -49,6 +51,7 @@ def main():
     set_seed(args.seed)
     device = torch.device(args.device)
 
+    print(f"[Init] Device: {device}, CUDA GPUs: {torch.cuda.device_count() if torch.cuda.is_available() else 0}")
     env = make_mario_env(args.env_id)
     obs = env.reset()
     in_channels = obs.shape[0]
@@ -61,6 +64,7 @@ def main():
     episode_length = 0
     episode_idx = 0
 
+    pbar = tqdm(total=args.total_steps, dynamic_ncols=True)
     for global_step in range(1, args.total_steps + 1):
         epsilon = linear_decay(args.eps_start, args.eps_end, args.eps_decay_steps, global_step)
         obs_tensor = torch.from_numpy(obs).float().div(255.0).to(device)
@@ -89,6 +93,14 @@ def main():
             episode_length = 0
             episode_idx += 1
 
+        if global_step % args.log_interval == 0:
+            pbar.update(args.log_interval)
+            pbar.set_postfix({
+                'eps': f"{epsilon:.3f}",
+                'len': episode_length,
+                'ret': f"{episode_return:.1f}"
+            })
+
         if global_step % 10_000 == 0:
             save_path = os.path.join(args.save_dir, f'model_{global_step}.pt')
             torch.save({**agent.state_dicts(), 'step': global_step}, save_path)
@@ -98,6 +110,7 @@ def main():
     torch.save({**agent.state_dicts(), 'step': args.total_steps}, save_path)
     env.close()
     writer.close()
+    pbar.close()
 
 
 if __name__ == '__main__':

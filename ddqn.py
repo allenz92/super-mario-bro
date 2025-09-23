@@ -52,7 +52,9 @@ class DDQNAgent:
     def act(self, obs: torch.Tensor, epsilon: float) -> int:
         if torch.rand(1).item() < epsilon:
             return int(torch.randint(0, self.cfg.num_actions, (1,)).item())
-        q_values = self.online(obs.unsqueeze(0))
+        # 使用主卡模型进行推理，避免 DataParallel 在 batch=1 时的额外开销
+        model = self._unwrap(self.online)
+        q_values = model(obs.unsqueeze(0))
         return int(q_values.argmax(dim=1).item())
 
     def learn(self, batch, gamma: float = None):
