@@ -1,5 +1,5 @@
 # Core
-numpy<2.0
+numpy==1.24.4
 opencv-python-headless>=4.8
 
 # Mario environment (gym < 0.26 compatibility)

@@ -21,9 +21,12 @@ class ReplayBuffer:
     def sample(self, batch_size: int):
         batch = random.sample(self.buffer, batch_size)
         obs, actions, rewards, next_obs, dones = zip(*batch)
-        # 返回位于 CPU 的张量，并使用 pinned memory，以便后续 .to(device, non_blocking=True)
-        obs = torch.from_numpy(np.stack(obs)).float().div(255.0).pin_memory()
-        next_obs = torch.from_numpy(np.stack(next_obs)).float().div(255.0).pin_memory()
+        # 返回位于 CPU 的张量；仅在使用 CUDA 时启用 pinned memory
+        obs = torch.from_numpy(np.stack(obs)).float().div(255.0)
+        next_obs = torch.from_numpy(np.stack(next_obs)).float().div(255.0)
+        if self.device.type == 'cuda' and torch.cuda.is_available():
+            obs = obs.pin_memory()
+            next_obs = next_obs.pin_memory()
         actions = torch.tensor(actions, dtype=torch.long)
         rewards = torch.tensor(rewards, dtype=torch.float32)
         dones = torch.tensor(dones, dtype=torch.float32)
