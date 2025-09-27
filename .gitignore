@@ -10,3 +10,7 @@ outputs/
 *.pth
 *.onnx
 *.log
+nes-py/
+*pycache*/
+venv
+Dockerfile.yt-dlp
