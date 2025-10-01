@@ -139,6 +139,7 @@ def main():
     parser.add_argument('--video-every-episodes', type=int, default=1000, help='每多少回合导出一次评估视频，<=0 关闭')
     parser.add_argument('--video-max-steps', type=int, default=10000, help='评估视频最大步数')
     parser.add_argument('--video-fps', type=int, default=30, help='评估视频帧率')
+    parser.add_argument('--plot-ep-group', type=int, default=10, help='绘图聚合粒度：每多少个episode累计一次回报')
     args = parser.parse_args()
 
     device = select_device(args.device)
@@ -269,13 +270,15 @@ def main():
     # 训练结束后输出 PNG 图表
     try:
         if len(episode_returns) > 0:
+            group = max(1, int(args.plot_ep_group))
+            grouped_returns = [sum(episode_returns[i:i+group]) for i in range(0, len(episode_returns), group)]
             plt.figure(figsize=(8, 4))
-            plt.plot(episode_returns)
-            plt.title('Episode Return')
-            plt.xlabel('Episode')
-            plt.ylabel('Return')
+            plt.plot(grouped_returns)
+            plt.title(f'Cumulative Return per {group} Episodes')
+            plt.xlabel(f'Block (each {group} episodes)')
+            plt.ylabel('Cumulative Return')
             plt.tight_layout()
-            plt.savefig(os.path.join(args.save_dir, 'episode_return.png'))
+            plt.savefig(os.path.join(args.save_dir, f'episode_return_per{group}.png'))
             plt.close()
         if len(episode_lengths) > 0:
             plt.figure(figsize=(8, 4))
