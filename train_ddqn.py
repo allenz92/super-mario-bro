@@ -17,7 +17,7 @@ from replay_buffer import ReplayBuffer
 from ddqn import DDQNAgent, DDQNConfig
 
 
-def record_eval_video(env_id: str, frame_skip: int, stack: int, agent: DDQNAgent, device: torch.device, save_path: str, max_steps: int = 10000, epsilon: float = 0.0, fps: int = 30, prefer_fourcc: str = 'avc1'):
+def record_eval_video(env_id: str, frame_skip: int, stack: int, agent: DDQNAgent, device: torch.device, save_path: str, max_steps: int = 10000, epsilon: float = 0.0, fps: int = 30, prefer_fourcc: str = 'MJPG'):
     def to_bgr(img):
         if img is None:
             return None
@@ -35,8 +35,11 @@ def record_eval_video(env_id: str, frame_skip: int, stack: int, agent: DDQNAgent
         base, ext = os.path.splitext(path)
         for code in preferred_list:
             target_path = path
-            if code == 'MJPG' and ext.lower() != '.avi':
+            # 根据编码器选择常见扩展名
+            if code in ('MJPG', 'XVID', 'DIVX') and ext.lower() != '.avi':
                 target_path = base + '.avi'
+            elif code in ('mp4v', 'avc1', 'H264') and ext.lower() != '.mp4':
+                target_path = base + '.mp4'
             fourcc = cv2.VideoWriter_fourcc(*code)
             writer_local = cv2.VideoWriter(target_path, fourcc, fps_val, (w, h))
             if writer_local.isOpened():
@@ -63,7 +66,7 @@ def record_eval_video(env_id: str, frame_skip: int, stack: int, agent: DDQNAgent
         w,
         h,
         fps,
-        [prefer_fourcc, 'avc1', 'mp4v', 'H264', 'MJPG']
+        [prefer_fourcc, 'MJPG', 'XVID', 'mp4v', 'avc1', 'H264']
     )
     if writer is None:
         print("[Warn] 无法打开 VideoWriter，跳过视频保存")
@@ -137,6 +140,7 @@ def main():
     parser.add_argument('--video-every-episodes', type=int, default=1000, help='每多少回合导出一次评估视频，<=0 关闭')
     parser.add_argument('--video-max-steps', type=int, default=10000, help='评估视频最大步数')
     parser.add_argument('--video-fps', type=int, default=30, help='评估视频帧率')
+    parser.add_argument('--video-fourcc', type=str, default='MJPG', help='视频编码器 fourcc，常见：MJPG/XVID/mp4v/avc1/H264')
     parser.add_argument('--plot-ep-group', type=int, default=10, help='绘图聚合粒度：每多少个episode累计一次回报')
     args = parser.parse_args()
 
@@ -218,6 +222,7 @@ def main():
                         max_steps=args.video_max_steps,
                         epsilon=0.0,
                         fps=args.video_fps,
+                        prefer_fourcc=args.video_fourcc,
                     )
                 except Exception as e:
                     print(f"[Warn] 录制视频失败: {e}")

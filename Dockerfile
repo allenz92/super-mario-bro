@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-venv python3-pip python3-dev \
     build-essential git ca-certificates \
     ffmpeg xvfb \
+    libx264-dev libx265-dev \
     libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender1 \
     libsdl2-2.0-0 libsdl2-dev libsdl2-image-2.0-0 libsdl2-mixer-2.0-0 libsdl2-ttf-2.0-0 \
     && rm -rf /var/lib/apt/lists/*
